@@ -3,52 +3,74 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Hockey – Line Tracker</title>
+<title>DEK Hockey Shefford – Line Tracker</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg:#0d1117; --surface:#161b22; --surface2:#21262d; --border:#30363d;
-    --text:#e6edf3; --muted:#8b949e; --accent:#58a6ff;
-    --green:#3fb950; --red:#f85149; --radius:10px;
+    --bg:#0d1520;
+    --surface:#121e2e;
+    --surface2:#1a2a3f;
+    --border:#1e3450;
+    --text:#eef2f7;
+    --muted:#7a9ab8;
+    --accent:#3bbfde;
+    --orange:#e8650a;
+    --gold:#f5a820;
+    --green:#3bbfde;
+    --red:#e84040;
+    --radius:10px;
   }
   body { font-family:-apple-system,"Segoe UI",system-ui,sans-serif; background:var(--bg); color:var(--text); font-size:15px; min-height:100vh; }
 
-  header { background:var(--surface); border-bottom:1px solid var(--border); padding:14px 16px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; }
-  header h1 { font-size:17px; font-weight:700; }
-  #header-sub { font-size:12px; color:var(--muted); }
+  header {
+    background:var(--surface);
+    border-bottom:2px solid var(--orange);
+    padding:10px 14px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  .header-logo { flex-shrink:0; width:44px; height:44px; }
+  .header-titles { flex:1; min-width:0; }
+  header h1 { font-size:16px; font-weight:800; letter-spacing:.3px; color:var(--accent); line-height:1.2; }
+  header h1 span { color:var(--gold); }
+  #header-sub { font-size:11px; color:var(--muted); margin-top:1px; }
 
   .tab-radio { display:none; }
-  .tabs { display:flex; background:var(--surface); border-bottom:1px solid var(--border); }
-  .tab-label { flex:1; padding:11px 0; text-align:center; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:3px solid transparent; user-select:none; }
+  .tabs { display:flex; background:var(--surface); border-bottom:2px solid var(--border); }
+  .tab-label { flex:1; padding:11px 0; text-align:center; font-size:13px; font-weight:700; color:var(--muted); cursor:pointer; border-bottom:3px solid transparent; user-select:none; letter-spacing:.3px; text-transform:uppercase; font-size:11px; }
   #t-game:checked  ~ .tabs label[for="t-game"],
   #t-stats:checked ~ .tabs label[for="t-stats"],
-  #t-setup:checked ~ .tabs label[for="t-setup"] { color:var(--accent); border-bottom-color:var(--accent); }
+  #t-setup:checked ~ .tabs label[for="t-setup"] { color:var(--accent); border-bottom-color:var(--orange); }
   .page { display:none; padding:16px; }
   #t-game:checked  ~ .pages #pg-game,
   #t-stats:checked ~ .pages #pg-stats,
   #t-setup:checked ~ .pages #pg-setup { display:block; }
 
   .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:13px 15px; margin-bottom:9px; display:flex; align-items:center; gap:11px; }
-  .card.ice { border-color:var(--accent); }
-  .card.next-up { border-left:4px solid var(--green); background:var(--surface2); flex-direction:column; align-items:flex-start; gap:3px; margin-bottom:14px; }
-  .tag { font-size:11px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); }
-  .big-name { font-size:22px; font-weight:700; color:var(--green); }
+  .card.ice { border-color:var(--accent); border-left:3px solid var(--orange); }
+  .card.next-up { border-left:4px solid var(--orange); background:var(--surface2); flex-direction:column; align-items:flex-start; gap:3px; margin-bottom:14px; }
+  .tag { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--gold); font-weight:700; }
+  .big-name { font-size:22px; font-weight:700; color:var(--orange); }
   .sub-text { font-size:13px; color:var(--muted); }
-  .rank { width:26px; height:26px; border-radius:50%; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--muted); flex-shrink:0; }
-  .rank.first { background:var(--green); color:#fff; }
+  .rank { width:26px; height:26px; border-radius:50%; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--muted); flex-shrink:0; border:1px solid var(--border); }
+  .rank.first { background:var(--orange); color:#fff; border-color:var(--orange); }
   .info { flex:1; min-width:0; }
   .info .n { font-weight:600; font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .info .m { font-size:12px; color:var(--muted); margin-top:1px; }
-  .badge { font-size:13px; font-weight:700; background:var(--surface2); border-radius:6px; padding:4px 10px; flex-shrink:0; }
-  .dot { width:9px; height:9px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+  .badge { font-size:13px; font-weight:700; background:var(--surface2); border-radius:6px; padding:4px 10px; flex-shrink:0; color:var(--accent); border:1px solid var(--border); }
+  .dot { width:9px; height:9px; border-radius:50%; background:var(--orange); flex-shrink:0; }
 
-  .btn { border:none; border-radius:7px; padding:8px 13px; font-size:13px; font-weight:600; cursor:pointer; flex-shrink:0; line-height:1.3; }
-  .btn-green  { background:var(--green);    color:#fff; }
-  .btn-accent { background:var(--accent);   color:#fff; }
+  .btn { border:none; border-radius:7px; padding:8px 13px; font-size:13px; font-weight:700; cursor:pointer; flex-shrink:0; line-height:1.3; letter-spacing:.2px; }
+  .btn-green  { background:var(--orange); color:#fff; }
+  .btn-accent { background:var(--accent);  color:#0d1520; }
   .btn-muted  { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
   .btn-full   { width:100%; padding:13px; font-size:15px; border-radius:var(--radius); margin-bottom:10px; display:block; }
 
-  .section-title { font-size:11px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); margin:14px 0 7px; }
+  .section-title { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--gold); margin:14px 0 7px; font-weight:700; }
   .input-row { display:flex; gap:8px; margin-bottom:10px; }
   input[type=text], input[type=number] { background:var(--surface); border:1px solid var(--border); border-radius:7px; padding:10px 12px; color:var(--text); font-size:14px; outline:none; flex:1; }
   input:focus { border-color:var(--accent); }
@@ -57,7 +79,7 @@
   .config-row { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; }
   .config-row input[type=number] { width:64px; flex:none; text-align:center; }
   .stat-bar-wrap { flex:1; height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
-  .stat-bar { height:100%; border-radius:3px; background:var(--accent); }
+  .stat-bar { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--orange),var(--gold)); }
   .empty { text-align:center; padding:40px 20px; color:var(--muted); font-size:14px; line-height:1.9; }
   footer { text-align:center; padding:22px 16px 16px; font-size:11px; color:var(--muted); border-top:1px solid var(--border); margin-top:6px; }
 </style>
@@ -69,14 +91,51 @@
 <input class="tab-radio" type="radio" name="tab" id="t-setup">
 
 <header>
-  <h1>🏒 Line Tracker</h1>
-  <span id="header-sub">Configurez votre équipe</span>
+  <!-- DEK Hockey Shefford wolf mascot SVG logo -->
+  <svg class="header-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-label="DEK Hockey Shefford">
+    <!-- Flame / maple leaf backdrop -->
+    <ellipse cx="50" cy="62" rx="38" ry="28" fill="#0d1520"/>
+    <polygon points="50,10 38,30 22,25 32,42 15,50 33,52 28,70 50,60 72,70 67,52 85,50 68,42 78,25 62,30" fill="#e8650a" opacity=".85"/>
+    <polygon points="50,18 40,34 27,30 35,44 22,51 36,53 32,67 50,58 68,67 64,53 78,51 65,44 73,30 60,34" fill="#f5a820" opacity=".6"/>
+    <!-- Wolf head body -->
+    <ellipse cx="50" cy="46" rx="22" ry="24" fill="#c85208"/>
+    <!-- White muzzle -->
+    <ellipse cx="50" cy="55" rx="13" ry="13" fill="#dde4ea"/>
+    <!-- Ears -->
+    <polygon points="34,30 28,14 42,26" fill="#c85208"/>
+    <polygon points="66,30 72,14 58,26" fill="#c85208"/>
+    <polygon points="35,28 31,17 41,25" fill="#e84060" opacity=".8"/>
+    <polygon points="65,28 69,17 59,25" fill="#e84060" opacity=".8"/>
+    <!-- Eyes -->
+    <ellipse cx="42" cy="43" rx="5" ry="5" fill="#1a1a1a"/>
+    <ellipse cx="58" cy="43" rx="5" ry="5" fill="#1a1a1a"/>
+    <ellipse cx="43" cy="42" rx="2.5" ry="2.5" fill="#f5a820"/>
+    <ellipse cx="59" cy="42" rx="2.5" ry="2.5" fill="#f5a820"/>
+    <ellipse cx="43" cy="42" rx="1.2" ry="1.2" fill="#1a1a1a"/>
+    <ellipse cx="59" cy="42" rx="1.2" ry="1.2" fill="#1a1a1a"/>
+    <!-- Nose -->
+    <ellipse cx="50" cy="51" rx="3.5" ry="2.5" fill="#222"/>
+    <!-- Open mouth / fangs -->
+    <path d="M42,57 Q50,64 58,57" stroke="#c85208" stroke-width="1.5" fill="none"/>
+    <polygon points="45,57 43,63 47,57" fill="#eef2f7"/>
+    <polygon points="55,57 57,63 53,57" fill="#eef2f7"/>
+    <!-- Hockey stick arm -->
+    <rect x="63" y="35" width="5" height="30" rx="2" transform="rotate(30,65,50)" fill="#8B5E3C"/>
+    <rect x="70" y="60" width="14" height="4" rx="2" transform="rotate(30,65,50)" fill="#7a4e2a"/>
+    <!-- DEK text -->
+    <text x="50" y="85" text-anchor="middle" font-family="Arial Black,Impact,sans-serif" font-size="11" font-weight="900" fill="#3bbfde" stroke="#0d1520" stroke-width="1">DEK</text>
+    <text x="50" y="95" text-anchor="middle" font-family="Arial Black,Impact,sans-serif" font-size="8" font-weight="900" fill="#f5a820" stroke="#0d1520" stroke-width=".5">SHEFFORD</text>
+  </svg>
+  <div class="header-titles">
+    <h1>DEK <span>Hockey Shefford</span></h1>
+    <div id="header-sub">Configurez votre équipe</div>
+  </div>
 </header>
 
 <div class="tabs">
-  <label class="tab-label" for="t-game">Jeu</label>
-  <label class="tab-label" for="t-stats">Stats</label>
-  <label class="tab-label" for="t-setup">Équipe</label>
+  <label class="tab-label" for="t-game">🏒 Jeu</label>
+  <label class="tab-label" for="t-stats">📊 Stats</label>
+  <label class="tab-label" for="t-setup">⚙️ Équipe</label>
 </div>
 
 <div class="pages">
@@ -88,11 +147,11 @@
     </div>
     <div id="g-content">
       <div class="card next-up">
-        <div class="tag">Prochain joueur</div>
-        <div class="big-name" id="next-name">—</div>
+        <div class="tag">Prochaine ligne</div>
+        <div id="next-names-list" style="display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 2px"></div>
         <div class="sub-text" id="next-sub"></div>
       </div>
-      <button class="btn btn-green btn-full" id="btn-send">✅ Envoyer sur la glace</button>
+      <button class="btn btn-green btn-full" id="btn-send">🔄 Prochain changement</button>
       <div class="section-title" id="onice-title"></div>
       <div id="onice-list"></div>
       <div class="section-title" id="bench-title"></div>
@@ -130,8 +189,6 @@
 
 </div>
 
-<footer>Made with IBM Bob</footer>
-
 <script>
   var state = { players: [], onIceCount: 5 };
 
@@ -155,7 +212,7 @@
       d.style.background = 'var(--surface2)';
       d.innerHTML =
         '<span style="flex:1;font-size:14px">' + esc(p.name) + '</span>' +
-        '<span style="font-size:11px;font-weight:700;background:var(--surface);border-radius:4px;padding:2px 6px;color:var(--muted)">' + esc(p.pos) + '</span>' +
+        '<span style="font-size:11px;font-weight:700;background:var(--surface);border-radius:4px;padding:2px 6px;color:var(--accent)">' + esc(p.pos) + '</span>' +
         '<span style="color:var(--red);font-size:18px;cursor:pointer;padding:0 6px;line-height:1" data-i="' + i + '">✕</span>';
       d.querySelector('[data-i]').addEventListener('click', function() {
         state.players.splice(+this.getAttribute('data-i'), 1);
@@ -206,12 +263,26 @@
     var bch = getBench(), ice = getOnIce();
     document.getElementById('header-sub').textContent = ice.length + ' sur glace · ' + bch.length + ' sur le banc';
 
-    var next = bch[0];
-    document.getElementById('next-name').textContent = next ? next.name : '—';
-    document.getElementById('next-sub').textContent  = next
-      ? next.pos + ' · ' + next.shifts + ' présences sur la glace'
+    var nextGroup = bch.slice(0, state.onIceCount);
+    var nlEl = document.getElementById('next-names-list');
+    nlEl.innerHTML = '';
+    if (nextGroup.length) {
+      nextGroup.forEach(function(p) {
+        var s = document.createElement('span');
+        s.style.cssText = 'background:var(--orange);color:#fff;border-radius:5px;padding:3px 9px;font-size:14px;font-weight:700';
+        s.textContent = p.name;
+        nlEl.appendChild(s);
+      });
+    } else {
+      var s = document.createElement('span');
+      s.style.cssText = 'font-size:22px;font-weight:700;color:var(--orange)';
+      s.textContent = '—';
+      nlEl.appendChild(s);
+    }
+    document.getElementById('next-sub').textContent = nextGroup.length
+      ? nextGroup.length + ' joueur' + (nextGroup.length > 1 ? 's' : '') + ' prêts à embarquer'
       : 'Tous les joueurs sont sur la glace';
-    document.getElementById('btn-send').disabled = !next;
+    document.getElementById('btn-send').disabled = !nextGroup.length;
 
     document.getElementById('onice-title').textContent = 'Sur la glace (' + ice.length + '/' + state.onIceCount + ')';
     var oiEl = document.getElementById('onice-list');
@@ -221,7 +292,7 @@
       d.className = 'card ice';
       d.innerHTML =
         '<div class="dot"></div>' +
-        '<div class="info"><div class="n">' + esc(p.name) + ' <span style="font-size:11px;color:var(--muted)">' + esc(p.pos) + '</span></div>' +
+        '<div class="info"><div class="n">' + esc(p.name) + ' <span style="font-size:11px;color:var(--accent)">' + esc(p.pos) + '</span></div>' +
         '<div class="m">' + p.shifts + ' présences</div></div>' +
         '<button class="btn btn-muted" style="padding:7px 11px;font-size:13px">↩ Banc</button>';
       d.querySelector('button').addEventListener('click', function() { p.onIce = false; renderGame(); });
@@ -247,7 +318,10 @@
   document.getElementById('btn-send').addEventListener('click', function() {
     var bch = getBench();
     if (!bch.length) return;
-    bch[0].onIce = true; bch[0].shifts++;
+    // Pull everyone off the ice
+    state.players.forEach(function(p) { p.onIce = false; });
+    // Send the next N players (fewest shifts first) onto the ice
+    bch.slice(0, state.onIceCount).forEach(function(p) { p.onIce = true; p.shifts++; });
     renderGame();
   });
 
@@ -271,7 +345,7 @@
           '<div style="font-size:11px;color:var(--muted)">' + esc(p.pos) + (p.onIce ? ' · 🔵 glace' : '') + '</div>' +
         '</div>' +
         '<div class="stat-bar-wrap"><div class="stat-bar" style="width:' + pct + '%"></div></div>' +
-        '<div style="font-size:14px;font-weight:700;min-width:28px;text-align:right">' + p.shifts + '</div>';
+        '<div style="font-size:14px;font-weight:700;min-width:28px;text-align:right;color:var(--gold)">' + p.shifts + '</div>';
       list.appendChild(d);
     });
   }
