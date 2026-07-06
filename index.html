@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hockey – Line Tracker</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#0d1117; --surface:#161b22; --surface2:#21262d; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#58a6ff;
+    --green:#3fb950; --red:#f85149; --radius:10px;
+  }
+  body { font-family:-apple-system,"Segoe UI",system-ui,sans-serif; background:var(--bg); color:var(--text); font-size:15px; min-height:100vh; }
+
+  header { background:var(--surface); border-bottom:1px solid var(--border); padding:14px 16px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; }
+  header h1 { font-size:17px; font-weight:700; }
+  #header-sub { font-size:12px; color:var(--muted); }
+
+  .tab-radio { display:none; }
+  .tabs { display:flex; background:var(--surface); border-bottom:1px solid var(--border); }
+  .tab-label { flex:1; padding:11px 0; text-align:center; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:3px solid transparent; user-select:none; }
+  #t-game:checked  ~ .tabs label[for="t-game"],
+  #t-stats:checked ~ .tabs label[for="t-stats"],
+  #t-setup:checked ~ .tabs label[for="t-setup"] { color:var(--accent); border-bottom-color:var(--accent); }
+  .page { display:none; padding:16px; }
+  #t-game:checked  ~ .pages #pg-game,
+  #t-stats:checked ~ .pages #pg-stats,
+  #t-setup:checked ~ .pages #pg-setup { display:block; }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:13px 15px; margin-bottom:9px; display:flex; align-items:center; gap:11px; }
+  .card.ice { border-color:var(--accent); }
+  .card.next-up { border-left:4px solid var(--green); background:var(--surface2); flex-direction:column; align-items:flex-start; gap:3px; margin-bottom:14px; }
+  .tag { font-size:11px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); }
+  .big-name { font-size:22px; font-weight:700; color:var(--green); }
+  .sub-text { font-size:13px; color:var(--muted); }
+  .rank { width:26px; height:26px; border-radius:50%; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--muted); flex-shrink:0; }
+  .rank.first { background:var(--green); color:#fff; }
+  .info { flex:1; min-width:0; }
+  .info .n { font-weight:600; font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .info .m { font-size:12px; color:var(--muted); margin-top:1px; }
+  .badge { font-size:13px; font-weight:700; background:var(--surface2); border-radius:6px; padding:4px 10px; flex-shrink:0; }
+  .dot { width:9px; height:9px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+
+  .btn { border:none; border-radius:7px; padding:8px 13px; font-size:13px; font-weight:600; cursor:pointer; flex-shrink:0; line-height:1.3; }
+  .btn-green  { background:var(--green);    color:#fff; }
+  .btn-accent { background:var(--accent);   color:#fff; }
+  .btn-muted  { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
+  .btn-full   { width:100%; padding:13px; font-size:15px; border-radius:var(--radius); margin-bottom:10px; display:block; }
+
+  .section-title { font-size:11px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); margin:14px 0 7px; }
+  .input-row { display:flex; gap:8px; margin-bottom:10px; }
+  input[type=text], input[type=number] { background:var(--surface); border:1px solid var(--border); border-radius:7px; padding:10px 12px; color:var(--text); font-size:14px; outline:none; flex:1; }
+  input:focus { border-color:var(--accent); }
+  input::placeholder { color:var(--muted); }
+  select { background:var(--surface); border:1px solid var(--border); border-radius:7px; padding:10px 8px; color:var(--text); font-size:13px; outline:none; }
+  .config-row { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; }
+  .config-row input[type=number] { width:64px; flex:none; text-align:center; }
+  .stat-bar-wrap { flex:1; height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
+  .stat-bar { height:100%; border-radius:3px; background:var(--accent); }
+  .empty { text-align:center; padding:40px 20px; color:var(--muted); font-size:14px; line-height:1.9; }
+  footer { text-align:center; padding:22px 16px 16px; font-size:11px; color:var(--muted); border-top:1px solid var(--border); margin-top:6px; }
+</style>
+</head>
+<body>
+
+<input class="tab-radio" type="radio" name="tab" id="t-game" checked>
+<input class="tab-radio" type="radio" name="tab" id="t-stats">
+<input class="tab-radio" type="radio" name="tab" id="t-setup">
+
+<header>
+  <h1>🏒 Line Tracker</h1>
+  <span id="header-sub">Configurez votre équipe</span>
+</header>
+
+<div class="tabs">
+  <label class="tab-label" for="t-game">Jeu</label>
+  <label class="tab-label" for="t-stats">Stats</label>
+  <label class="tab-label" for="t-setup">Équipe</label>
+</div>
+
+<div class="pages">
+
+  <!-- JEU -->
+  <div class="page" id="pg-game">
+    <div id="g-empty" class="empty" style="display:none">
+      Configurez votre équipe dans l'onglet <strong>Équipe</strong>,<br>puis appuyez sur <strong>▶ Démarrer</strong>.
+    </div>
+    <div id="g-content">
+      <div class="card next-up">
+        <div class="tag">Prochain joueur</div>
+        <div class="big-name" id="next-name">—</div>
+        <div class="sub-text" id="next-sub"></div>
+      </div>
+      <button class="btn btn-green btn-full" id="btn-send">✅ Envoyer sur la glace</button>
+      <div class="section-title" id="onice-title"></div>
+      <div id="onice-list"></div>
+      <div class="section-title" id="bench-title"></div>
+      <div id="bench-list"></div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="page" id="pg-stats">
+    <div id="s-empty" class="empty" style="display:none">Aucune donnée encore.<br>Jouez d'abord quelques changements !</div>
+    <div id="stats-list"></div>
+    <button class="btn btn-muted btn-full" id="btn-reset" style="margin-top:4px">🔄 Réinitialiser les compteurs</button>
+  </div>
+
+  <!-- ÉQUIPE -->
+  <div class="page" id="pg-setup">
+    <div class="config-row">
+      <div>
+        <div style="font-size:14px">Joueurs sur glace simultanés</div>
+        <div style="font-size:12px;color:var(--muted)">Habituellement 5 (excl. gardien)</div>
+      </div>
+      <input type="number" id="cfg-n" value="5" min="1" max="10">
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Ajoutez les joueurs de votre équipe :</p>
+    <div class="input-row">
+      <input type="text" id="inp-name" placeholder="Nom du joueur" maxlength="30">
+      <select id="inp-pos">
+        <option>A</option><option>D</option><option>C</option><option>G</option>
+      </select>
+      <button class="btn btn-accent" id="btn-add">+</button>
+    </div>
+    <div id="setup-list"></div>
+    <button class="btn btn-green btn-full" id="btn-start" style="margin-top:8px">▶ Démarrer / Appliquer</button>
+  </div>
+
+</div>
+
+<footer>Made with IBM Bob</footer>
+
+<script>
+  var state = { players: [], onIceCount: 5 };
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Tab change
+  document.getElementById('t-game').addEventListener('change', renderGame);
+  document.getElementById('t-stats').addEventListener('change', renderStats);
+  document.getElementById('t-setup').addEventListener('change', renderSetup);
+
+  // ── SETUP ──
+  function renderSetup() {
+    document.getElementById('cfg-n').value = state.onIceCount;
+    var list = document.getElementById('setup-list');
+    list.innerHTML = '';
+    state.players.forEach(function(p, i) {
+      var d = document.createElement('div');
+      d.className = 'card';
+      d.style.background = 'var(--surface2)';
+      d.innerHTML =
+        '<span style="flex:1;font-size:14px">' + esc(p.name) + '</span>' +
+        '<span style="font-size:11px;font-weight:700;background:var(--surface);border-radius:4px;padding:2px 6px;color:var(--muted)">' + esc(p.pos) + '</span>' +
+        '<span style="color:var(--red);font-size:18px;cursor:pointer;padding:0 6px;line-height:1" data-i="' + i + '">✕</span>';
+      d.querySelector('[data-i]').addEventListener('click', function() {
+        state.players.splice(+this.getAttribute('data-i'), 1);
+        renderSetup();
+      });
+      list.appendChild(d);
+    });
+  }
+
+  document.getElementById('btn-add').addEventListener('click', addPlayer);
+  document.getElementById('inp-name').addEventListener('keydown', function(e) { if (e.key === 'Enter') addPlayer(); });
+
+  function addPlayer() {
+    var nameEl = document.getElementById('inp-name');
+    var posEl  = document.getElementById('inp-pos');
+    var name = nameEl.value.trim();
+    if (!name) return;
+    state.players.push({ id: Date.now() + Math.random(), name: name, pos: posEl.value, shifts: 0, onIce: false });
+    nameEl.value = '';
+    nameEl.focus();
+    renderSetup();
+  }
+
+  document.getElementById('btn-start').addEventListener('click', function() {
+    state.onIceCount = Math.max(1, parseInt(document.getElementById('cfg-n').value) || 5);
+    if (state.players.length === 0) { alert('Ajoutez au moins un joueur.'); return; }
+    state.players.forEach(function(p, i) {
+      p.onIce = i < state.onIceCount;
+      if (p.onIce) p.shifts = Math.max(p.shifts, 1);
+    });
+    document.getElementById('t-game').checked = true;
+    renderGame();
+  });
+
+  // ── GAME ──
+  function getBench() {
+    return state.players.filter(function(p) { return !p.onIce; })
+      .sort(function(a, b) { return a.shifts - b.shifts || state.players.indexOf(a) - state.players.indexOf(b); });
+  }
+  function getOnIce() { return state.players.filter(function(p) { return p.onIce; }); }
+
+  function renderGame() {
+    var has = state.players.length > 0;
+    document.getElementById('g-empty').style.display   = has ? 'none' : 'block';
+    document.getElementById('g-content').style.display = has ? 'block' : 'none';
+    if (!has) return;
+
+    var bch = getBench(), ice = getOnIce();
+    document.getElementById('header-sub').textContent = ice.length + ' sur glace · ' + bch.length + ' sur le banc';
+
+    var next = bch[0];
+    document.getElementById('next-name').textContent = next ? next.name : '—';
+    document.getElementById('next-sub').textContent  = next
+      ? next.pos + ' · ' + next.shifts + ' présences sur la glace'
+      : 'Tous les joueurs sont sur la glace';
+    document.getElementById('btn-send').disabled = !next;
+
+    document.getElementById('onice-title').textContent = 'Sur la glace (' + ice.length + '/' + state.onIceCount + ')';
+    var oiEl = document.getElementById('onice-list');
+    oiEl.innerHTML = '';
+    ice.forEach(function(p) {
+      var d = document.createElement('div');
+      d.className = 'card ice';
+      d.innerHTML =
+        '<div class="dot"></div>' +
+        '<div class="info"><div class="n">' + esc(p.name) + ' <span style="font-size:11px;color:var(--muted)">' + esc(p.pos) + '</span></div>' +
+        '<div class="m">' + p.shifts + ' présences</div></div>' +
+        '<button class="btn btn-muted" style="padding:7px 11px;font-size:13px">↩ Banc</button>';
+      d.querySelector('button').addEventListener('click', function() { p.onIce = false; renderGame(); });
+      oiEl.appendChild(d);
+    });
+
+    document.getElementById('bench-title').textContent = "Banc — file d'attente (" + bch.length + ')';
+    var bEl = document.getElementById('bench-list');
+    bEl.innerHTML = '';
+    bch.forEach(function(p, idx) {
+      var d = document.createElement('div');
+      d.className = 'card';
+      d.innerHTML =
+        '<div class="rank' + (idx === 0 ? ' first' : '') + '">' + (idx + 1) + '</div>' +
+        '<div class="info"><div class="n">' + esc(p.name) + '</div><div class="m">' + esc(p.pos) + ' · ' + p.shifts + ' présences</div></div>' +
+        '<div class="badge">' + p.shifts + '</div>' +
+        '<button class="btn btn-green" style="padding:7px 11px;font-size:13px">➚ Glace</button>';
+      d.querySelector('button').addEventListener('click', function() { p.onIce = true; p.shifts++; renderGame(); });
+      bEl.appendChild(d);
+    });
+  }
+
+  document.getElementById('btn-send').addEventListener('click', function() {
+    var bch = getBench();
+    if (!bch.length) return;
+    bch[0].onIce = true; bch[0].shifts++;
+    renderGame();
+  });
+
+  // ── STATS ──
+  function renderStats() {
+    var total = state.players.reduce(function(s, p) { return s + p.shifts; }, 0);
+    var max   = Math.max.apply(null, state.players.map(function(p) { return p.shifts; }).concat(1));
+    var empty = document.getElementById('s-empty');
+    var list  = document.getElementById('stats-list');
+    if (!state.players.length || !total) { empty.style.display = 'block'; list.innerHTML = ''; return; }
+    empty.style.display = 'none';
+    var sorted = state.players.slice().sort(function(a, b) { return b.shifts - a.shifts; });
+    list.innerHTML = '';
+    sorted.forEach(function(p) {
+      var pct = (p.shifts / max * 100).toFixed(1);
+      var d = document.createElement('div');
+      d.className = 'card';
+      d.innerHTML =
+        '<div style="min-width:110px">' +
+          '<div style="font-weight:600;font-size:14px">' + esc(p.name) + '</div>' +
+          '<div style="font-size:11px;color:var(--muted)">' + esc(p.pos) + (p.onIce ? ' · 🔵 glace' : '') + '</div>' +
+        '</div>' +
+        '<div class="stat-bar-wrap"><div class="stat-bar" style="width:' + pct + '%"></div></div>' +
+        '<div style="font-size:14px;font-weight:700;min-width:28px;text-align:right">' + p.shifts + '</div>';
+      list.appendChild(d);
+    });
+  }
+
+  document.getElementById('btn-reset').addEventListener('click', function() {
+    if (!confirm('Réinitialiser tous les compteurs de présences ?')) return;
+    state.players.forEach(function(p) { p.shifts = 0; p.onIce = false; });
+    renderStats();
+  });
+
+  // Init
+  renderSetup();
+  renderGame();
+</script>
+</body>
+</html>
