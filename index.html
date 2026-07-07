@@ -209,7 +209,7 @@
     return copy;
   }
 
-  var APP_VERSION = '2026-07-07-10:48';
+  var APP_VERSION = '2026-07-07-10:50';
 
   document.getElementById('header-version').textContent = 'Version ' + APP_VERSION;
 
@@ -274,8 +274,9 @@
     state.onPlayCount = Math.max(1, parseInt(document.getElementById('cfg-n').value) || 5);
     if (state.players.length === 0) { alert('Ajoutez au moins un joueur.'); return; }
     state.started = true;
-    state.players.forEach(function(p, i) {
-      p.onPlay = i < state.onPlayCount;
+    var starters = shuffle(state.players).slice(0, state.onPlayCount);
+    state.players.forEach(function(p) {
+      p.onPlay = starters.indexOf(p) !== -1;
       if (p.onPlay) {
         p.shifts = Math.max(p.shifts, 1);
         p.lastShift = ++state.rotationTick;
