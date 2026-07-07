@@ -283,7 +283,7 @@
   }
 
   function renderGame() {
-    var has = state.players.length > 0;
+    var has = state.started;
     document.getElementById('g-empty').style.display   = has ? 'none' : 'block';
     document.getElementById('g-content').style.display = has ? 'block' : 'none';
     if (!has) return;
@@ -338,7 +338,11 @@
         '<div class="info"><div class="n">' + esc(p.name) + '</div><div class="m">' + p.shifts + ' présences</div></div>' +
         '<div class="badge">' + p.shifts + '</div>' +
         '<button class="btn btn-green" style="padding:7px 11px;font-size:13px">➚ Jeu</button>';
-      d.querySelector('button').addEventListener('click', function() { p.onPlay = true; p.shifts++; renderGame(); });
+      d.querySelector('button').addEventListener('click', function() {
+        if (getOnPlay().length >= state.onPlayCount) return;
+        p.onPlay = true;
+        renderGame();
+      });
       bEl.appendChild(d);
     });
   }
@@ -379,7 +383,9 @@
   document.getElementById('btn-reset').addEventListener('click', function() {
     if (!confirm('Réinitialiser tous les compteurs de présences ?')) return;
     state.players.forEach(function(p) { p.shifts = 0; p.onPlay = false; p.lastShift = 0; });
+    state.started = false;
     renderStats();
+    renderGame();
   });
 
   // Init
