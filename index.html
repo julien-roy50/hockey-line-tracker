@@ -120,7 +120,6 @@
       <div class="card next-up">
         <div class="tag">Prochaine ligne</div>
         <div id="next-names-list" style="display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 2px"></div>
-        <div class="sub-text" id="next-sub"></div>
       </div>
       <button class="btn btn-green btn-full" id="btn-send">🔄 Prochain changement</button>
       <div class="section-title" id="onplay-title"></div>
@@ -334,9 +333,6 @@
       s.textContent = '—';
       nlEl.appendChild(s);
     }
-    document.getElementById('next-sub').textContent = nextGroup.length
-      ? 'Prochaine ligne complète de ' + nextGroup.length + ' joueur' + (nextGroup.length > 1 ? 's' : '')
-      : 'Tous les joueurs sont sur le jeu';
     document.getElementById('btn-send').disabled = !nextGroup.length;
 
     document.getElementById('onplay-title').textContent = 'Sur le jeu (' + play.length + '/' + state.onPlayCount + ')';
