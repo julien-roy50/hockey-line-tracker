@@ -72,6 +72,10 @@
 
   .section-title { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--gold); margin:14px 0 7px; font-weight:700; }
   .input-row { display:flex; gap:8px; margin-bottom:10px; }
+  .check-list { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; margin-bottom:10px; max-height:260px; overflow:auto; }
+  .check-item { display:flex; align-items:center; gap:10px; padding:7px 0; font-size:14px; }
+  .check-item + .check-item { border-top:1px solid var(--border); }
+  .check-item input[type=checkbox] { width:16px; height:16px; accent-color:var(--orange); }
   input[type=text], input[type=number] { background:var(--surface); border:1px solid var(--border); border-radius:7px; padding:10px 12px; color:var(--text); font-size:14px; outline:none; flex:1; }
   input:focus { border-color:var(--accent); }
   input::placeholder { color:var(--muted); }
@@ -141,18 +145,15 @@
       </div>
       <input type="number" id="cfg-n" value="5" min="1" max="10">
     </div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Ajoutez les joueurs de votre équipe :</p>
-    <div class="input-row">
-      <select id="preset-player" style="flex:1">
-        <option value="">Choisir un joueur prédéfini</option>
-      </select>
-      <button class="btn btn-accent" id="btn-add-preset">+</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <p style="font-size:13px;color:var(--muted)">Cochez les joueurs de votre équipe :</p>
+      <span id="selected-count" style="font-size:12px;font-weight:700;color:var(--orange)"></span>
     </div>
+    <div id="preset-list" class="check-list"></div>
     <div class="input-row">
       <input type="text" id="inp-name" placeholder="Nom du joueur" maxlength="30">
-      <button class="btn btn-accent" id="btn-add">+</button>
+      <button class="btn btn-accent" id="btn-add">Ajouter</button>
     </div>
-    <div id="setup-list"></div>
     <button class="btn btn-green btn-full" id="btn-start" style="margin-top:8px">▶ Démarrer / Appliquer</button>
   </div>
 
@@ -200,54 +201,45 @@
   // ── SETUP ──
   function renderSetup() {
     if (!state.started) document.getElementById('cfg-n').value = state.onPlayCount;
-    var presetEl = document.getElementById('preset-player');
-    presetEl.innerHTML = '<option value="">Choisir un joueur prédéfini</option>';
+    var presetEl = document.getElementById('preset-list');
+    document.getElementById('selected-count').textContent = state.players.length + ' joueur' + (state.players.length > 1 ? 's' : '') + ' sélectionné' + (state.players.length > 1 ? 's' : '');
+    presetEl.innerHTML = '';
     presetPlayers.forEach(function(name) {
       var exists = state.players.some(function(p) { return p.name === name; });
-      if (!exists) {
-        var option = document.createElement('option');
-        option.value = name;
-        option.textContent = name;
-        presetEl.appendChild(option);
-      }
-    });
-    var list = document.getElementById('setup-list');
-    list.innerHTML = '';
-    state.players.forEach(function(p, i) {
-      var d = document.createElement('div');
-      d.className = 'card';
-      d.style.background = 'var(--surface2)';
-      d.innerHTML =
-        '<span style="flex:1;font-size:14px">' + esc(p.name) + '</span>' +
-        '<span style="color:var(--red);font-size:18px;cursor:pointer;padding:0 6px;line-height:1" data-i="' + i + '">✕</span>';
-      d.querySelector('[data-i]').addEventListener('click', function() {
-        state.players.splice(+this.getAttribute('data-i'), 1);
-        renderSetup();
+      var row = document.createElement('label');
+      row.className = 'check-item';
+      row.innerHTML = '<input type="checkbox" ' + (exists ? 'checked' : '') + ' data-name="' + esc(name) + '"><span>' + esc(name) + '</span>';
+      row.querySelector('input').addEventListener('change', function() {
+        togglePresetPlayer(name, this.checked);
       });
-      list.appendChild(d);
+      presetEl.appendChild(row);
     });
   }
 
   document.getElementById('btn-add').addEventListener('click', addPlayer);
-  document.getElementById('btn-add-preset').addEventListener('click', addPresetPlayer);
   document.getElementById('inp-name').addEventListener('keydown', function(e) { if (e.key === 'Enter') addPlayer(); });
 
   function addPlayer() {
     var nameEl = document.getElementById('inp-name');
     var name = nameEl.value.trim();
     if (!name) return;
-    state.players.push({ id: Date.now() + Math.random(), name: name, shifts: 0, onPlay: false, lastShift: 0 });
+    if (presetPlayers.indexOf(name) === -1) presetPlayers.push(name);
+    if (!state.players.some(function(p) { return p.name === name; })) {
+      state.players.push({ id: Date.now() + Math.random(), name: name, shifts: 0, onPlay: false, lastShift: 0 });
+    }
     nameEl.value = '';
     nameEl.focus();
     renderSetup();
   }
 
-  function addPresetPlayer() {
-    var presetEl = document.getElementById('preset-player');
-    var name = presetEl.value;
-    if (!name) return;
-    state.players.push({ id: Date.now() + Math.random(), name: name, shifts: 0, onPlay: false, lastShift: 0 });
-    presetEl.value = '';
+  function togglePresetPlayer(name, checked) {
+    var index = state.players.findIndex(function(p) { return p.name === name; });
+    if (checked && index === -1) {
+      state.players.push({ id: Date.now() + Math.random(), name: name, shifts: 0, onPlay: false, lastShift: 0 });
+    }
+    if (!checked && index !== -1) {
+      state.players.splice(index, 1);
+    }
     renderSetup();
   }
 
@@ -275,6 +267,21 @@
   }
   function getOnPlay() { return state.players.filter(function(p) { return p.onPlay; }); }
 
+  function getNextLine() {
+    var bch = getBench();
+    var play = getOnPlay();
+    var incoming = bch.slice(0, state.onPlayCount);
+    var spotsLeft = state.onPlayCount - incoming.length;
+    var staying = [];
+    if (spotsLeft > 0) {
+      staying = play
+        .filter(function(p) { return incoming.indexOf(p) === -1; })
+        .sort(function(a, b) { return a.shifts - b.shifts || a.lastShift - b.lastShift; })
+        .slice(0, spotsLeft);
+    }
+    return incoming.concat(staying);
+  }
+
   function renderGame() {
     var has = state.players.length > 0;
     document.getElementById('g-empty').style.display   = has ? 'none' : 'block';
@@ -284,7 +291,7 @@
     var bch = getBench(), play = getOnPlay();
     document.getElementById('header-sub').textContent = play.length + ' sur le jeu · ' + bch.length + ' sur le banc';
 
-    var nextGroup = bch.slice(0, state.onPlayCount);
+    var nextGroup = getNextLine();
     var nlEl = document.getElementById('next-names-list');
     nlEl.innerHTML = '';
     if (nextGroup.length) {
@@ -301,7 +308,7 @@
       nlEl.appendChild(s);
     }
     document.getElementById('next-sub').textContent = nextGroup.length
-      ? nextGroup.length + ' joueur' + (nextGroup.length > 1 ? 's' : '') + ' prêts à embarquer'
+      ? 'Prochaine ligne complète de ' + nextGroup.length + ' joueur' + (nextGroup.length > 1 ? 's' : '')
       : 'Tous les joueurs sont sur le jeu';
     document.getElementById('btn-send').disabled = !nextGroup.length;
 
@@ -337,24 +344,10 @@
   }
 
   document.getElementById('btn-send').addEventListener('click', function() {
-    var bch = getBench();
-    var play = getOnPlay();
-    if (!bch.length) return;
-    // Retirer tous les joueurs du jeu
+    var nextLine = getNextLine();
+    if (!nextLine.length) return;
     state.players.forEach(function(p) { p.onPlay = false; });
-    // Envoyer les joueurs du banc (moins de présences en premier) sur le jeu
-    var incoming = bch.slice(0, state.onPlayCount);
-    incoming.forEach(function(p) { p.onPlay = true; p.shifts++; p.lastShift = p.shifts; });
-    // Si le banc avait moins de joueurs que nécessaire, compléter avec les
-    // joueurs qui étaient sur le jeu et ont le moins de présences
-    var spotsLeft = state.onPlayCount - incoming.length;
-    if (spotsLeft > 0) {
-      var staying = play
-        .filter(function(p) { return !p.onPlay; })
-        .sort(function(a, b) { return a.shifts - b.shifts || a.lastShift - b.lastShift; })
-        .slice(0, spotsLeft);
-      staying.forEach(function(p) { p.onPlay = true; p.shifts++; p.lastShift = p.shifts; });
-    }
+    nextLine.forEach(function(p) { p.onPlay = true; p.shifts++; p.lastShift = p.shifts; });
     renderGame();
   });
 
