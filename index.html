@@ -187,7 +187,7 @@
     '87 L. BALLARD',
     'OUELLET'
   ];
-  var state = { players: [], onPlayCount: 5, started: false };
+  var state = { players: [], onPlayCount: 5, started: false, rotationTick: 0 };
 
   function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -254,7 +254,10 @@
     state.started = true;
     state.players.forEach(function(p, i) {
       p.onPlay = i < state.onPlayCount;
-      if (p.onPlay) p.shifts = Math.max(p.shifts, 1);
+      if (p.onPlay) {
+        p.shifts = Math.max(p.shifts, 1);
+        p.lastShift = ++state.rotationTick;
+      }
     });
     document.getElementById('t-game').checked = true;
     renderGame();
@@ -341,6 +344,8 @@
       d.querySelector('button').addEventListener('click', function() {
         if (getOnPlay().length >= state.onPlayCount) return;
         p.onPlay = true;
+        p.shifts++;
+        p.lastShift = ++state.rotationTick;
         renderGame();
       });
       bEl.appendChild(d);
@@ -351,7 +356,11 @@
     var nextLine = getNextLine();
     if (!nextLine.length) return;
     state.players.forEach(function(p) { p.onPlay = false; });
-    nextLine.forEach(function(p) { p.onPlay = true; p.shifts++; p.lastShift = p.shifts; });
+    nextLine.forEach(function(p) {
+      p.onPlay = true;
+      p.shifts++;
+      p.lastShift = ++state.rotationTick;
+    });
     renderGame();
   });
 
@@ -384,6 +393,7 @@
     if (!confirm('Réinitialiser tous les compteurs de présences ?')) return;
     state.players.forEach(function(p) { p.shifts = 0; p.onPlay = false; p.lastShift = 0; });
     state.started = false;
+    state.rotationTick = 0;
     renderStats();
     renderGame();
   });
