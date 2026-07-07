@@ -198,7 +198,18 @@
     return a.name.localeCompare(b.name, 'fr', { numeric: true, sensitivity: 'base' });
   }
 
-  var APP_VERSION = '2026-07-07-10:42';
+  function shuffle(list) {
+    var copy = list.slice();
+    for (var i = copy.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = copy[i];
+      copy[i] = copy[j];
+      copy[j] = tmp;
+    }
+    return copy;
+  }
+
+  var APP_VERSION = '2026-07-07-10:48';
 
   document.getElementById('header-version').textContent = 'Version ' + APP_VERSION;
 
@@ -276,8 +287,8 @@
 
   // ── GAME ──
   function getBench() {
-    return state.players.filter(function(p) { return !p.onPlay; })
-      .sort(function(a, b) { return a.shifts - b.shifts || a.lastShift - b.lastShift || state.players.indexOf(a) - state.players.indexOf(b); });
+    return shuffle(state.players.filter(function(p) { return !p.onPlay; }))
+      .sort(function(a, b) { return a.shifts - b.shifts || a.lastShift - b.lastShift; });
   }
   function getOnPlay() { return state.players.filter(function(p) { return p.onPlay; }); }
 
@@ -288,8 +299,8 @@
     var spotsLeft = state.onPlayCount - incoming.length;
     var staying = [];
     if (spotsLeft > 0) {
-      staying = play
-        .filter(function(p) { return incoming.indexOf(p) === -1; })
+      staying = shuffle(play
+        .filter(function(p) { return incoming.indexOf(p) === -1; }))
         .sort(function(a, b) { return a.shifts - b.shifts || a.lastShift - b.lastShift; })
         .slice(0, spotsLeft);
     }
