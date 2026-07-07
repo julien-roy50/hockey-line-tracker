@@ -196,7 +196,7 @@
     var posEl  = document.getElementById('inp-pos');
     var name = nameEl.value.trim();
     if (!name) return;
-    state.players.push({ id: Date.now() + Math.random(), name: name, pos: posEl.value, shifts: 0, onPlay: false });
+    state.players.push({ id: Date.now() + Math.random(), name: name, pos: posEl.value, shifts: 0, onPlay: false, lastShift: 0 });
     nameEl.value = '';
     nameEl.focus();
     renderSetup();
@@ -222,7 +222,7 @@
   // ── GAME ──
   function getBench() {
     return state.players.filter(function(p) { return !p.onPlay; })
-      .sort(function(a, b) { return a.shifts - b.shifts || state.players.indexOf(a) - state.players.indexOf(b); });
+      .sort(function(a, b) { return a.shifts - b.shifts || a.lastShift - b.lastShift || state.players.indexOf(a) - state.players.indexOf(b); });
   }
   function getOnPlay() { return state.players.filter(function(p) { return p.onPlay; }); }
 
@@ -295,16 +295,16 @@
     state.players.forEach(function(p) { p.onPlay = false; });
     // Envoyer les joueurs du banc (moins de présences en premier) sur le jeu
     var incoming = bch.slice(0, state.onPlayCount);
-    incoming.forEach(function(p) { p.onPlay = true; p.shifts++; });
+    incoming.forEach(function(p) { p.onPlay = true; p.shifts++; p.lastShift = p.shifts; });
     // Si le banc avait moins de joueurs que nécessaire, compléter avec les
     // joueurs qui étaient sur le jeu et ont le moins de présences
     var spotsLeft = state.onPlayCount - incoming.length;
     if (spotsLeft > 0) {
       var staying = play
         .filter(function(p) { return !p.onPlay; })
-        .sort(function(a, b) { return a.shifts - b.shifts; })
+        .sort(function(a, b) { return a.shifts - b.shifts || a.lastShift - b.lastShift; })
         .slice(0, spotsLeft);
-      staying.forEach(function(p) { p.onPlay = true; });
+      staying.forEach(function(p) { p.onPlay = true; p.shifts++; p.lastShift = p.shifts; });
     }
     renderGame();
   });
@@ -336,7 +336,7 @@
 
   document.getElementById('btn-reset').addEventListener('click', function() {
     if (!confirm('Réinitialiser tous les compteurs de présences ?')) return;
-    state.players.forEach(function(p) { p.shifts = 0; p.onPlay = false; });
+    state.players.forEach(function(p) { p.shifts = 0; p.onPlay = false; p.lastShift = 0; });
     renderStats();
   });
 
