@@ -99,6 +99,7 @@
   <div class="header-titles">
     <h1>DEK <span>Hockey Shefford</span></h1>
     <div id="header-sub">Configurez votre équipe</div>
+    <div id="header-version" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
   </div>
 </header>
 
@@ -193,6 +194,14 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  function sortByName(a, b) {
+    return a.name.localeCompare(b.name, 'fr', { numeric: true, sensitivity: 'base' });
+  }
+
+  var APP_VERSION = '2026-07-07-10:42';
+
+  document.getElementById('header-version').textContent = 'Version ' + APP_VERSION;
+
   // Tab change
   document.getElementById('t-game').addEventListener('change', renderGame);
   document.getElementById('t-stats').addEventListener('change', renderStats);
@@ -204,7 +213,9 @@
     var presetEl = document.getElementById('preset-list');
     document.getElementById('selected-count').textContent = state.players.length + ' joueur' + (state.players.length > 1 ? 's' : '') + ' sélectionné' + (state.players.length > 1 ? 's' : '');
     presetEl.innerHTML = '';
-    presetPlayers.forEach(function(name) {
+    presetPlayers.slice().sort(function(a, b) {
+      return a.localeCompare(b, 'fr', { numeric: true, sensitivity: 'base' });
+    }).forEach(function(name) {
       var exists = state.players.some(function(p) { return p.name === name; });
       var row = document.createElement('label');
       row.className = 'check-item';
@@ -291,10 +302,10 @@
     document.getElementById('g-content').style.display = has ? 'block' : 'none';
     if (!has) return;
 
-    var bch = getBench(), play = getOnPlay();
+    var bch = getBench(), play = getOnPlay().slice().sort(sortByName);
     document.getElementById('header-sub').textContent = play.length + ' sur le jeu · ' + bch.length + ' sur le banc';
 
-    var nextGroup = getNextLine();
+    var nextGroup = getNextLine().slice().sort(sortByName);
     var nlEl = document.getElementById('next-names-list');
     nlEl.innerHTML = '';
     if (nextGroup.length) {
@@ -372,7 +383,7 @@
     var list  = document.getElementById('stats-list');
     if (!state.players.length || !total) { empty.style.display = 'block'; list.innerHTML = ''; return; }
     empty.style.display = 'none';
-    var sorted = state.players.slice().sort(function(a, b) { return b.shifts - a.shifts; });
+    var sorted = state.players.slice().sort(sortByName);
     list.innerHTML = '';
     sorted.forEach(function(p) {
       var pct = (p.shifts / max * 100).toFixed(1);
